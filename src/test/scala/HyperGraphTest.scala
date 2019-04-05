@@ -10,9 +10,7 @@ object HyperGraphTest {
     val sc = new SparkContext(conf)
     val edgesRDD = sc.textFile(getClass.getResource("/testdata1.txt").getPath).map(_.split(" ").map(_.toInt).toSet)
 
-    for (v <- getEdges(edgesRDD)) {
-      println(v.getNodes.toString())
-    }
+    getEdges(edgesRDD).foreach(e => println(e.toString))
   }
 
   def getEdges(vertices: RDD[Set[Int]]): Array[HyperEdge] = {

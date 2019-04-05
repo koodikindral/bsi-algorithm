@@ -19,4 +19,8 @@ class HyperEdge(_nodes: Iterable[HyperVertex]) {
     }
     this
   }
+
+  override def toString: String =  {
+    nodes.map(n => n.getValue).mkString("(", ", ", ")")
+  }
 }
