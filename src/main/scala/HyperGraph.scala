@@ -1,5 +1,8 @@
 class HyperGraph(private[this] val nodes: Array[HyperVertex], private[this] val edges: Array[HyperEdge]) {
 
+  this.calcSupp
+  this.calcDSupp
+
   def getNodes : Array[HyperVertex] = nodes
 
   def getEdges : Array[HyperEdge] = edges
@@ -22,5 +25,17 @@ class HyperGraph(private[this] val nodes: Array[HyperVertex], private[this] val 
       n1 ++= n1.union(Array(n))
       n.dSupp = getSupp(n1)
     }
+  }
+
+  def getCardinality: Int = {
+    edges.length
+  }
+
+  def getMaxClique: List[HyperVertex] = {
+    nodes.toList.sortWith(_.supp < _.supp).filter( _.dSupp < getCardinality)
+  }
+
+  def getToExplore: List[HyperVertex] = {
+    getNodes.toList.sortWith(_.supp < _.supp).diff(getMaxClique)
   }
 }
