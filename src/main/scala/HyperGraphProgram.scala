@@ -4,7 +4,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 object HyperGraphProgram {
 
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("Hypergraph greedy").setMaster("local[1]")
+    val conf = new SparkConf().setAppName("Hypergraph greedy").setMaster("local[4]")
     val sc = new SparkContext(conf)
     val edgesRDD = sc.textFile(getClass.getResource("/testdata1.txt").getPath)
       .map(_.split(" ")
@@ -18,14 +18,29 @@ object HyperGraphProgram {
 
     println("ITERATION #1")
 
+    printTraversals(hyperGraph)
     printVertices(hyperGraph)
     printEdges(hyperGraph)
 
-    print("Max clique: ")
-    println(hyperGraph.getMaxClique.map(_.getValue))
+    val maxClique = hyperGraph.getMaxClique
+    val toExplore = hyperGraph.getToExplore
 
-    print("To-explore: ")
-    println(hyperGraph.getToExplore.map(_.getValue))
+    println("Max clique: ")
+    maxClique.foreach(f => println(f.toString))
+
+    println("To-explore: ")
+    toExplore.foreach(f => println(f.toString))
+
+    hyperGraph.traversals = maxClique.map(f => new Traversal(toExplore.take(1)(0).getEdges.union(f.getEdges)))
+
+    println("ITERATION #2")
+    hyperGraph.calcSupp()
+    hyperGraph.calcDSupp()
+    println("Max clique: ")
+    hyperGraph.getMaxClique.foreach(f => println(f.toString))
+
+    println("To-explore: ")
+    hyperGraph.getToExplore.foreach(f => println(f.toString))
   }
 
   def printVertices(graph: HyperGraph): Unit = {
@@ -33,6 +48,11 @@ object HyperGraphProgram {
     graph.getNodes.foreach(f => {
       println(f)
     })
+  }
+
+  def printTraversals(graph: HyperGraph): Unit = {
+    println("Traversals:")
+    graph.traversals.foreach(f => println(f.toString))
   }
 
   def printEdges(graph: HyperGraph): Unit = {

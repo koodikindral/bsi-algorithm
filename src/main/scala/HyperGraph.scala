@@ -1,5 +1,9 @@
 class HyperGraph(private[this] val nodes: Array[HyperVertex], private[this] val edges: Array[HyperEdge]) {
 
+  var traversals = nodes.map(f => {
+    new Traversal(Array(f))
+  })
+
   this.calcSupp()
   this.calcDSupp()
 
@@ -9,19 +13,18 @@ class HyperGraph(private[this] val nodes: Array[HyperVertex], private[this] val 
 
   def getSupp(a: Array[HyperVertex]): Int = edges.map(k => k.getNodes.intersect(a)).count(_.nonEmpty)
 
+
   def calcSupp(): Unit = {
-    nodes.foreach(f => {
-      f.supp = getSupp(Array(f))
+    traversals.foreach(f => {
+      f.supp = getSupp(f.getEdges)
     })
   }
 
   def calcDSupp(): Unit = {
-    val nn = nodes.sortWith(_.supp < _.supp)
-    var n1 = nn.take(0)
-
-    nodes.sortWith(_.supp < _.supp).foreach(f => {
-      n1 ++= n1.union(Array(f))
-      f.dSupp = getSupp(n1)
+    var temp = Array[HyperVertex]()
+    traversals.sortWith(_.supp < _.supp).foreach(f => {
+      temp ++= temp.union(f.getEdges)
+      f.dSupp = getSupp(temp)
     })
   }
 
@@ -29,11 +32,11 @@ class HyperGraph(private[this] val nodes: Array[HyperVertex], private[this] val 
     edges.length
   }
 
-  def getMaxClique: List[HyperVertex] = {
-    nodes.toList.filter(_.dSupp < getCardinality).sortWith(_.supp < _.supp)
+  def getMaxClique: Array[Traversal] = {
+    traversals.filter(_.dSupp < getCardinality).sortWith(_.supp < _.supp)
   }
 
-  def getToExplore: List[HyperVertex] = {
-    nodes.toList.sortWith(_.supp < _.supp).diff(getMaxClique)
+  def getToExplore: Array[Traversal] = {
+    traversals.sortWith(_.supp < _.supp).diff(getMaxClique)
   }
 }
