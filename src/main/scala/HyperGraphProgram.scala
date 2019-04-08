@@ -13,14 +13,29 @@ object HyperGraphProgram {
     val hyperGraph: HyperGraph = createHyperGraph(vertices, edges)
 
     println("ITERATION #1")
+
+    printVertices(hyperGraph)
+    printEdges(hyperGraph)
+
     print("Max clique: ")
-    for (m <- hyperGraph.getMaxClique)
-      print(m.getValue + ", ")
-    println()
+    println(hyperGraph.getMaxClique.map(_.getValue))
+
     print("To-explore: ")
-    for (m <- hyperGraph.getToExplore)
-      print(m.getValue)
-    println()
+    println(hyperGraph.getToExplore.map(_.getValue))
+  }
+
+  def printVertices(graph: HyperGraph) = {
+    println("HyperVertices:")
+    graph.getNodes.map(f => {
+      println(f)
+    })
+  }
+
+  def printEdges(graph: HyperGraph) = {
+    println("HyperEdges:")
+    graph.getEdges.map(f => {
+      println(f.getNodes)
+    })
   }
 
   def getEdges(edges: RDD[Set[Int]]): Array[HyperEdge] = {
@@ -55,6 +70,9 @@ object HyperGraphProgram {
     val e5 = new HyperEdge(Array(n6, n7, n8))
     val e6 = new HyperEdge(Array(n7))
 
+    //new HyperGraph(vertices, edges)
     new HyperGraph(Array(n1, n2, n3, n4, n5, n6, n7, n8), Array(e1, e2, e3, e4, e5, e6))
   }
+
+
 }

@@ -12,19 +12,19 @@ class HyperGraph(private[this] val nodes: Array[HyperVertex], private[this] val 
   }
 
   def calcSupp = {
-    for (n <- nodes) {
-      n.supp = getSupp(Array(n))
-    }
-
+    nodes.map(f => {
+      f.supp = getSupp(Array(f))
+    })
   }
 
   def calcDSupp() = {
     val nn = nodes.sortWith(_.supp < _.supp)
     var n1 = nn.take(0)
-    for (n <- nodes.sortWith(_.supp < _.supp)) {
-      n1 ++= n1.union(Array(n))
-      n.dSupp = getSupp(n1)
-    }
+
+    nodes.sortWith(_.supp < _.supp).map(f => {
+      n1 ++= n1.union(Array(f))
+      f.dSupp = getSupp(n1)
+    })
   }
 
   def getCardinality: Int = {
@@ -36,6 +36,6 @@ class HyperGraph(private[this] val nodes: Array[HyperVertex], private[this] val 
   }
 
   def getToExplore: List[HyperVertex] = {
-    getNodes.toList.sortWith(_.supp < _.supp).diff(getMaxClique)
+    nodes.toList.sortWith(_.supp < _.supp).diff(getMaxClique)
   }
 }
