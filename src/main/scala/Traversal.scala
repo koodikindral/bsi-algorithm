@@ -1,6 +1,7 @@
 class Traversal(private[this] val edges: Array[HyperVertex]) {
   var supp: Int = 0
   var dSupp: Int = 0
+  var sum: Int = edges.map(_.getValue).mkString("").toInt
 
   def getEdges: Array[HyperVertex] = edges
 
@@ -9,7 +10,7 @@ class Traversal(private[this] val edges: Array[HyperVertex]) {
     edges.foreach(f => {
       s += f.toString
     })
-    s += ", " + supp + ", " + dSupp + ")"
+    s += ", " + supp + ", " + dSupp + ", " + sum +")"
     s
   }
 }

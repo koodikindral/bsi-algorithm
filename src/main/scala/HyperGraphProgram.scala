@@ -1,65 +1,30 @@
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
+import scala.collection.mutable.ArrayBuffer
+
 object HyperGraphProgram {
 
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("Hypergraph greedy").setMaster("local[4]")
+    val conf = new SparkConf().setAppName("Hypergraph greedy").setMaster("local")
     val sc = new SparkContext(conf)
     val edgesRDD = sc.textFile(getClass.getResource("/testdata1.txt").getPath)
-      .map(_.split(" ")
-        .map(_.toInt).toSet)
+      .map(_.split(" ").map(_.toInt).toSet)
 
     val vertices: Array[HyperVertex] = getVertices(edgesRDD)
     val edges: Array[HyperEdge] = getEdges(edgesRDD, vertices)
 
-
     val hyperGraph: HyperGraph = createHyperGraph(vertices, edges)
 
-    println("ITERATION #1")
+    val maxClique = hyperGraph.calcDJSupp(vertices.map(f => new Traversal(Array(f))))
+    val toExplore = maxClique.filter(_.dSupp >= hyperGraph.getCardinality)
 
-    printTraversals(hyperGraph)
-    printVertices(hyperGraph)
-    printEdges(hyperGraph)
+    val mt = hyperGraph.traverse(maxClique.filter(_.dSupp < hyperGraph.getCardinality), toExplore, ArrayBuffer[Traversal]())
 
-    val maxClique = hyperGraph.getMaxClique
-    val toExplore = hyperGraph.getToExplore
-
-    println("Max clique: ")
-    maxClique.foreach(f => println(f.toString))
-
-    println("To-explore: ")
-    toExplore.foreach(f => println(f.toString))
-
-    hyperGraph.traversals = maxClique.map(f => new Traversal(toExplore.take(1)(0).getEdges.union(f.getEdges)))
-
-    println("ITERATION #2")
-    hyperGraph.calcSupp()
-    hyperGraph.calcDSupp()
-    println("Max clique: ")
-    hyperGraph.getMaxClique.foreach(f => println(f.toString))
-
-    println("To-explore: ")
-    hyperGraph.getToExplore.foreach(f => println(f.toString))
-  }
-
-  def printVertices(graph: HyperGraph): Unit = {
-    println("HyperVertices:")
-    graph.getNodes.foreach(f => {
-      println(f)
-    })
-  }
-
-  def printTraversals(graph: HyperGraph): Unit = {
-    println("Traversals:")
-    graph.traversals.foreach(f => println(f.toString))
-  }
-
-  def printEdges(graph: HyperGraph): Unit = {
-    println("HyperEdges:")
-    graph.getEdges.foreach(f => {
-      println(f.getNodes)
-    })
+    println("Minimal traversals: " + mt.size)
+    println("Result: ")
+    mt.foreach(f => print(f.sum + ", "))
+    println()
   }
 
   def getEdges(edges: RDD[Set[Int]], vertices: Array[HyperVertex]): Array[HyperEdge] = {
