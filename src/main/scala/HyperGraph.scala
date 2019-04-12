@@ -1,56 +1,49 @@
 import scala.collection.mutable.ArrayBuffer
 
-class HyperGraph(private[this] val nodes: Array[HyperVertex], private[this] val edges: Array[HyperEdge]) {
+class HyperGraph(private[this] val _vertices: Array[Int], private[this] val _edges: Array[HyperEdge]) {
 
-  var traversals = nodes.map(f => {
-    new Traversal(Array(f))
-  })
+  val vertices = _vertices
+  val edges = _edges
+  val cardinality = edges.length
+  var visited = ArrayBuffer[Int]()
 
-  var mtList = ArrayBuffer[Traversal]()
+  def getSupp(_edge: Array[Int]): Int = edges.map(e => e.vertices.intersect(_edge)).count(_.nonEmpty)
 
-  def getNodes : Array[HyperVertex] = nodes
+  def calcDJSupp(_edges: Array[HyperEdge]): Array[HyperEdge] = {
 
-  def getEdges : Array[HyperEdge] = edges
-
-  def getSupp(a: Array[HyperVertex]): Int = edges.map(k => k.getNodes.intersect(a)).count(_.nonEmpty)
-
-  def calcDJSupp(t: Array[Traversal]): Array[Traversal] = {
-
-    t.foreach(f => {
-      f.supp = getSupp(f.getEdges)
+    _edges.foreach(f => {
+      f.supp = getSupp(f.vertices.toArray)
     })
 
-    var temp = Array[HyperVertex]()
-
-    t.sortBy(f => (f.supp)).foreach(f => {
-      temp ++= temp.union(f.getEdges)
-      f.dSupp = getSupp(temp)
+    var count = Array[Int]()
+    _edges.sortBy(f => f.supp).foreach(f => {
+      count ++= count.union(f.vertices)
+      f.dSupp = getSupp(count)
     })
-
-    t
+    _edges
   }
 
-  def getCardinality: Int = {
-    edges.length
-  }
 
-  def traverse(maxClique: Array[Traversal], toExplore: Array[Traversal], mt: ArrayBuffer[Traversal]): ArrayBuffer[Traversal] = {
+  def traverse(maxClique: Array[HyperEdge], toExplore: Array[HyperEdge], mt: ArrayBuffer[HyperEdge]): ArrayBuffer[HyperEdge] = {
+
     toExplore.foreach(t => {
-      if (t.dSupp.equals(getCardinality) && maxClique.isEmpty) {
-        mt ++= ArrayBuffer(t)
+      println("Exploring: " + t.toString)
+
+      if (maxClique.isEmpty && !visited.contains(t.num)) {
+          mt ++= Array(t)
       } else {
 
-        println("Traversing: " + t.toString)
+        val pairs = calcDJSupp(
+          (toExplore.drop(1).filterNot(_.equals(t)) ++
+            maxClique).distinct.map(f => new HyperEdge((t.vertices.union(f.vertices).distinct)))
+        ).filterNot(_.supp.equals(t.supp))
 
-        val temp = calcDJSupp(
-          maxClique.map(f => new Traversal(t.getEdges.union(f.getEdges).distinct))
-        ).filter(!_.supp.equals(t.supp))
-
-        val explore = temp.filter(_.dSupp.equals(getCardinality))
-        val clique = temp.filter(!_.dSupp.equals(getCardinality))
+        val explore = pairs.filter(_.dSupp.equals(cardinality))
+        val clique = pairs.diff(explore).distinct
 
         traverse(clique, explore, mt)
       }
+      visited += t.num
     })
     mt
   }

@@ -8,40 +8,34 @@ object HyperGraphProgram {
   def main(args: Array[String]): Unit = {
     val conf = new SparkConf().setAppName("Hypergraph greedy").setMaster("local")
     val sc = new SparkContext(conf)
-    val edgesRDD = sc.textFile(getClass.getResource("/testdata1.txt").getPath)
+    val edgesRDD = sc.textFile(getClass.getResource("/testdata5.txt").getPath)
       .map(_.split(" ").map(_.toInt).toSet)
 
-    val vertices: Array[HyperVertex] = getVertices(edgesRDD)
-    val edges: Array[HyperEdge] = getEdges(edgesRDD, vertices)
 
-    val hyperGraph: HyperGraph = createHyperGraph(vertices, edges)
+    val edges: Array[HyperEdge] = getEdges(edgesRDD)
 
-    val maxClique = hyperGraph.calcDJSupp(vertices.map(f => new Traversal(Array(f))))
-    val toExplore = maxClique.filter(_.dSupp >= hyperGraph.getCardinality)
+    val hyperGraph: HyperGraph = createHyperGraph(edges)
 
-    val mt = hyperGraph.traverse(maxClique.filter(_.dSupp < hyperGraph.getCardinality), toExplore, ArrayBuffer[Traversal]())
+    val maxClique = hyperGraph.calcDJSupp(hyperGraph.vertices.map(f => new HyperEdge(Array(f))))
+    val toExplore = maxClique.filter(_.dSupp.equals(hyperGraph.cardinality))
 
+    val mt = hyperGraph.traverse(maxClique.diff(toExplore), toExplore, ArrayBuffer[HyperEdge]())
+
+    println("-----")
     println("Minimal traversals: " + mt.size)
     println("Result: ")
-    mt.foreach(f => print(f.sum + ", "))
+    mt.par.foreach(f => println(f.toString))
     println()
   }
 
-  def getEdges(edges: RDD[Set[Int]], vertices: Array[HyperVertex]): Array[HyperEdge] = {
-    val vertexMap = vertices.groupBy(_.getValue)
-
+  def getEdges(edges: RDD[Set[Int]]): Array[HyperEdge] = {
     edges.collect.map(f => {
-      new HyperEdge(f.flatMap(vertexMap(_)))
+      new HyperEdge(f)
     })
   }
 
-  def getVertices(edges: RDD[Set[Int]]): Array[HyperVertex] = {
-    edges.flatMap(f => f).distinct.sortBy(k => k, ascending = true).collect.map(f => {
-      new HyperVertex(f)
-    })
-  }
-
-  def createHyperGraph(vertices: Array[HyperVertex], edges: Array[HyperEdge]): HyperGraph = {
+  def createHyperGraph(edges: Array[HyperEdge]): HyperGraph = {
+    val vertices = edges.flatMap(f => f.vertices).distinct
     new HyperGraph(vertices, edges)
   }
 }
