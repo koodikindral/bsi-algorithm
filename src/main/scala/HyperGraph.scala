@@ -4,7 +4,7 @@ class HyperGraph(private[this] val _vertices: Array[Int], private[this] val _edg
 
   val vertices = _vertices
   val edges = _edges
-  val cardinality = edges.length
+  val cardinality = edges.size
   var visited = ArrayBuffer[Int]()
 
   def getSupp(_edge: Array[Int]): Int = edges.map(e => e.vertices.intersect(_edge)).count(_.nonEmpty)
@@ -26,24 +26,29 @@ class HyperGraph(private[this] val _vertices: Array[Int], private[this] val _edg
 
   def traverse(maxClique: Array[HyperEdge], toExplore: Array[HyperEdge], mt: ArrayBuffer[HyperEdge]): ArrayBuffer[HyperEdge] = {
 
+
+    var eList = toExplore.to[ArrayBuffer]
     toExplore.foreach(t => {
+
+      eList -= t
       println("Exploring: " + t.toString)
+      (maxClique ++ eList).foreach(f => println(f))
 
-      if (maxClique.isEmpty && !visited.contains(t.num)) {
-          mt ++= Array(t)
+      if (maxClique.isEmpty) {
+          mt += t
       } else {
-
+        // create pairs with max-clique and to explore list, filter out ones that have the same dsupp (Ess. condition 1)
         val pairs = calcDJSupp(
-          (toExplore.drop(1).filterNot(_.equals(t)) ++
-            maxClique).distinct.map(f => new HyperEdge((t.vertices.union(f.vertices).distinct)))
+          (maxClique ++ eList).map(f => new HyperEdge(t.vertices.union(f.vertices).distinct))
         ).filterNot(_.supp.equals(t.supp))
 
+        // check for 2.nd ess. condition (cardinality)
         val explore = pairs.filter(_.dSupp.equals(cardinality))
         val clique = pairs.diff(explore).distinct
 
-        traverse(clique, explore, mt)
+        val tr = traverse(clique, explore, mt)
+
       }
-      visited += t.num
     })
     mt
   }

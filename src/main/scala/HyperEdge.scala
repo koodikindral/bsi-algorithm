@@ -15,6 +15,11 @@ class HyperEdge(_vertices: Iterable[Int]) {
     this
   }
 
+  def add(n: Array[Int]) : HyperEdge = {
+    n.map(add)
+    this
+  }
+
   def remove(n: Int): HyperEdge = {
     if (vertices contains n) {
       vertices -= n

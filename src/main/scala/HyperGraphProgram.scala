@@ -8,7 +8,7 @@ object HyperGraphProgram {
   def main(args: Array[String]): Unit = {
     val conf = new SparkConf().setAppName("Hypergraph greedy").setMaster("local")
     val sc = new SparkContext(conf)
-    val edgesRDD = sc.textFile(getClass.getResource("/testdata5.txt").getPath)
+    val edgesRDD = sc.textFile(getClass.getResource("/testdata1.txt").getPath)
       .map(_.split(" ").map(_.toInt).toSet)
 
 
@@ -18,6 +18,13 @@ object HyperGraphProgram {
 
     val maxClique = hyperGraph.calcDJSupp(hyperGraph.vertices.map(f => new HyperEdge(Array(f))))
     val toExplore = maxClique.filter(_.dSupp.equals(hyperGraph.cardinality))
+
+    println("Cardinality: " + hyperGraph.cardinality)
+    println("Initial-Explore: " + toExplore.size)
+    toExplore.foreach(f => println(f))
+
+    println("Initial-Clique: ")
+    maxClique.diff(toExplore).foreach(f => println(f))
 
     val mt = hyperGraph.traverse(maxClique.diff(toExplore), toExplore, ArrayBuffer[HyperEdge]())
 
