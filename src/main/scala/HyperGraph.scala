@@ -26,28 +26,26 @@ class HyperGraph(private[this] val _vertices: Array[Int], private[this] val _edg
 
   def traverse(maxClique: Array[HyperEdge], toExplore: Array[HyperEdge], mt: ArrayBuffer[HyperEdge]): ArrayBuffer[HyperEdge] = {
 
-
     var eList = toExplore.to[ArrayBuffer]
     toExplore.foreach(t => {
 
+      // remove currently explorable element from max-clique
       eList -= t
-      println("Exploring: " + t.toString)
-      (maxClique ++ eList).foreach(f => println(f))
 
       if (maxClique.isEmpty) {
           mt += t
       } else {
-        // create pairs with max-clique and to explore list, filter out ones that have the same dsupp (Ess. condition 1)
+
+        // create pairs with max-clique & the rest of to-explore list
         val pairs = calcDJSupp(
           (maxClique ++ eList).map(f => new HyperEdge(t.vertices.union(f.vertices).distinct))
-        ).filterNot(_.supp.equals(t.supp))
+        ).filterNot(_.supp.equals(t.supp)) // remove elements that have 1. ess. condition fulfilled
 
         // check for 2.nd ess. condition (cardinality)
         val explore = pairs.filter(_.dSupp.equals(cardinality))
-        val clique = pairs.diff(explore).distinct
+        val clique = pairs.filterNot(_.dSupp.equals(cardinality))
 
-        val tr = traverse(clique, explore, mt)
-
+        traverse(clique, explore, mt)
       }
     })
     mt
