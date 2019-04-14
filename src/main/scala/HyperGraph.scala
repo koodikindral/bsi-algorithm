@@ -1,13 +1,12 @@
 import scala.collection.mutable.ArrayBuffer
 
-class HyperGraph(private[this] val _vertices: Array[Int], private[this] val _edges: Array[HyperEdge]) {
+class HyperGraph(private[this] val _vertices: Array[BigInt], private[this] val _edges: Array[HyperEdge]) {
 
   val vertices = _vertices
   val edges = _edges
   val cardinality = edges.size
-  var visited = ArrayBuffer[Int]()
 
-  def getSupp(_edge: Array[Int]): Int = edges.map(e => e.vertices.intersect(_edge)).count(_.nonEmpty)
+  def getSupp(_edge: Array[BigInt]): Int = edges.map(e => e.vertices.intersect(_edge)).count(_.nonEmpty)
 
   def calcDJSupp(_edges: Array[HyperEdge]): Array[HyperEdge] = {
 
@@ -15,7 +14,7 @@ class HyperGraph(private[this] val _vertices: Array[Int], private[this] val _edg
       f.supp = getSupp(f.vertices.toArray)
     })
 
-    var count = Array[Int]()
+    var count = Array[BigInt]()
     _edges.sortBy(f => f.supp).foreach(f => {
       count ++= count.union(f.vertices)
       f.dSupp = getSupp(count)
@@ -32,7 +31,7 @@ class HyperGraph(private[this] val _vertices: Array[Int], private[this] val _edg
       // remove currently explorable element from max-clique
       eList -= t
 
-      if (maxClique.isEmpty) {
+      if (t.supp == cardinality) {
           mt += t
       } else {
 
@@ -45,9 +44,9 @@ class HyperGraph(private[this] val _vertices: Array[Int], private[this] val _edg
         val explore = pairs.filter(_.dSupp.equals(cardinality))
         val clique = pairs.filterNot(_.dSupp.equals(cardinality))
 
-        traverse(clique, explore, mt)
+        mt ++= traverse(clique, explore, mt)
       }
     })
-    mt
+    mt.distinct
   }
 }
