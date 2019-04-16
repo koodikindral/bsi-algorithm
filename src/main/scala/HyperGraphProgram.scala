@@ -17,16 +17,18 @@ object HyperGraphProgram {
     val edges: Array[HyperEdge] = getEdges(edgesRDD)
 
     val hyperGraph: HyperGraph = createHyperGraph(edges)
-    println("Cardinality: " + hyperGraph.vertices.size)
+
+
+    println("Cardinality: " + hyperGraph.cardinality)
     val maxClique = hyperGraph.calcDJSupp(hyperGraph.vertices.map(f => new HyperEdge(Array(f))))
     val toExplore = maxClique.filter(_.dSupp.equals(hyperGraph.cardinality))
 
-    val mt = hyperGraph.traverse(maxClique.diff(toExplore), toExplore, ArrayBuffer[HyperEdge]())
+    val mt = hyperGraph.traverse(maxClique.filter(f => f.dSupp < hyperGraph.cardinality).sortBy(f => f.supp), toExplore, ArrayBuffer[HyperEdge]())
 
     println("-----")
-    println("Minimal traversals: " + mt.size)
+    println("Minimal traversals: " + mt.distinct.size)
     println("Result: ")
-    mt.foreach(f => println(f.toString))
+    mt.distinct.foreach(f => println(f.toString))
     println()
   }
 

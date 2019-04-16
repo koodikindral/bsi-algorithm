@@ -28,6 +28,6 @@ class HyperEdge(_vertices: Iterable[BigInt]) {
   }
 
   override def toString: String =  {
-    vertices.mkString("", "", " [" + supp + ", " + dSupp + ", " + num + "])")
+    vertices.mkString("", "", " [" + supp + ", " + dSupp + ", " + num + "]")
   }
 }
