@@ -1,12 +1,13 @@
 import scala.collection.mutable.ArrayBuffer
 
-class HyperEdge(_vertices: Iterable[BigInt]) {
+class HyperEdge(_vertices: Iterable[BigInt], _ess: Int) {
 
 
   val vertices = _vertices.to[ArrayBuffer]
   val num = BigInt(vertices.sortBy(f => f).mkString(""))
   var supp = 0
   var dSupp = 0
+  var ess = _ess
 
   def add(n: BigInt) : HyperEdge = {
     if (!vertices.contains(n)) {
@@ -28,6 +29,6 @@ class HyperEdge(_vertices: Iterable[BigInt]) {
   }
 
   override def toString: String =  {
-    vertices.mkString("", "", " [" + supp + ", " + dSupp + ", " + num + "]")
+    vertices.mkString("", "", " [" + supp + ", " + dSupp + ", " + num + "] (" + ess +")")
   }
 }

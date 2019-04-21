@@ -22,20 +22,27 @@ class HyperGraph(private[this] val _vertices: Array[BigInt], private[this] val _
     _edges
   }
 
+  def calcEssentiality(_edges: ArrayBuffer[BigInt], _length: Int): Int = {
+    val edges = _edges.toSet.subsets(_length)
+    val max = edges.map(f => getSupp(f.toArray)).reduceLeft(_ max _)
+    max
+  }
 
   def traverse(maxClique: Array[HyperEdge], toExplore: Array[HyperEdge], mt: ArrayBuffer[HyperEdge]): ArrayBuffer[HyperEdge] = {
 
+
     var eList = toExplore.to[ArrayBuffer]
-    toExplore.foreach(t => {
-      println("Exploring: " + t)
+    toExplore.par.foreach(t => {
+
+      //println("Exploring: " + t)
       // remove currently explorable element from max-clique
       eList -= t
 
       // create pairs with max-clique & the rest of to-explore list
 
       val pairs = calcDJSupp(
-        (maxClique ++ eList).map(f => new HyperEdge(t.vertices.union(f.vertices).distinct))
-      )
+        (maxClique ++ eList).map(f => new HyperEdge(t.vertices.union(f.vertices).distinct, calcEssentiality(t.vertices.union(f.vertices).distinct, t.vertices.size)))
+      ).filter(f => f.supp > f.ess)
 
       // remove elements that have 1. ess. condition fulfilled
       // check for 2.nd ess. condition (cardinality)
@@ -43,15 +50,12 @@ class HyperGraph(private[this] val _vertices: Array[BigInt], private[this] val _
       val mtList = explore.filter(_.supp.equals(cardinality))
 
       val newExplore = explore.diff(mtList)
-      val clique = pairs.diff(explore ++ mtList).filterNot(_.supp.equals(t.supp))
-
+      val clique = pairs.diff(explore ++ mtList)
+      mt ++= mtList
 
       if (!clique.isEmpty && !newExplore.isEmpty) {
         mt ++= traverse(clique, newExplore, mt)
-      } else {
-        mt ++= mtList
       }
-
     })
 
     mt.distinct
